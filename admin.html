@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>作品集 · 作品管理台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23a83e2a'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23f6f2e9' font-family='serif'%3E集%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#f4f0e7; --card:#fffdf8; --ink:#1b1917; --ink2:#3f3a33; --muted:#6f6a5f;
+    --faint:#989182; --line:#ded5c4; --line2:#e9e2d4; --accent:#a83e2a;
+    --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","STSong","SimSun",serif;
+    --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,p{margin:0}
+  button,input,textarea,select{font:inherit;color:inherit}
+  button{cursor:pointer}
+  [hidden]{display:none !important}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .topbar{position:sticky;top:0;z-index:20;background:rgba(244,240,231,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .topbar-inner{max-width:1320px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+  .brand-cn{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.12em}
+  .brand-sub{font-size:10px;letter-spacing:.24em;color:var(--faint)}
+  .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .save-state{font-size:11px;letter-spacing:.06em;color:var(--faint);margin-right:4px}
+  .save-state.dirty{color:var(--accent)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-size:12.5px;letter-spacing:.04em;transition:background .2s,border-color .2s,color .2s}
+  .btn:hover{background:var(--accent);border-color:var(--accent)}
+  .btn.ghost{background:transparent;color:var(--ink2);border-color:var(--line)}
+  .btn.ghost:hover{border-color:var(--ink);color:var(--ink);background:transparent}
+  .btn.primary{width:100%;padding:12px;font-size:13px;letter-spacing:.12em}
+  .btn.block{width:100%}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  .layout{max-width:1320px;margin:0 auto;padding:26px 24px 90px;display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:26px;align-items:start}
+  @media(max-width:1020px){.layout{grid-template-columns:1fr} .col-side{position:static !important}}
+
+  .dropzone{border:1px dashed #c9bfa9;background:rgba(255,253,248,.55);padding:30px 20px;text-align:center;transition:border-color .2s,background .2s;margin-bottom:22px}
+  .dropzone:hover,.dropzone.is-over{border-color:var(--ink);background:var(--card)}
+  .dz-title{font-family:var(--serif);font-size:18px;letter-spacing:.06em}
+  .dz-sub{margin-top:6px;font-size:12px;color:var(--muted)}
+  .dropzone.is-busy{opacity:.6;pointer-events:none}
+
+  .list-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+  .list-head h2{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:.04em}
+  .list-head h2 span{font-size:12px;color:var(--muted);margin-left:6px;letter-spacing:0}
+  .link-btn{padding:0;border:0;background:none;font-size:11.5px;color:var(--muted);border-bottom:1px solid transparent}
+  .link-btn:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .link-btn.danger:hover{color:var(--accent);border-bottom-color:var(--accent)}
+
+  .works{display:grid;gap:12px}
+  .work{display:grid;grid-template-columns:104px minmax(0,1fr) 34px;gap:14px;padding:12px;background:var(--card);border:1px solid var(--line2)}
+  @media(max-width:620px){.work{grid-template-columns:76px minmax(0,1fr) 30px;gap:10px;padding:10px}}
+  .work-thumb{width:100%;aspect-ratio:1;background:#e7e0d1;overflow:hidden;position:relative}
+  .work-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .work-body{min-width:0}
+  .fields{display:grid;grid-template-columns:1.25fr 1fr 112px;gap:7px 12px}
+  .fields .wide{grid-column:1/-1}
+  @media(max-width:760px){.fields{grid-template-columns:1fr 1fr}}
+  .fields label{display:block;min-width:0}
+  .fields .lbl{display:block;font-size:9.5px;letter-spacing:.14em;color:var(--faint);margin-bottom:1px}
+  .fields input{width:100%;border:0;border-bottom:1px solid var(--line2);background:transparent;padding:4px 1px;font-size:13px;outline:none;border-radius:0}
+  .fields input:focus{border-bottom-color:var(--ink)}
+  .fields input::placeholder{color:#bdb5a5}
+  .featured{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--muted);cursor:pointer}
+  .featured input{accent-color:var(--ink);width:13px;height:13px}
+  .work-actions{display:flex;flex-direction:column;gap:4px;align-items:stretch}
+  .work-actions button{width:100%;height:26px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12px;line-height:1}
+  .work-actions button:hover:not(:disabled){border-color:var(--ink);color:var(--ink)}
+  .work-actions button:disabled{opacity:.3;cursor:default}
+  .work-actions button[data-act="del"]:hover{border-color:var(--accent);color:var(--accent)}
+
+  .empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--line);background:rgba(255,253,248,.4)}
+
+  .col-side{position:sticky;top:80px;display:grid;gap:14px}
+  .panel{background:var(--card);border:1px solid var(--line2);padding:16px}
+  .panel-title{font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:.06em;margin-bottom:12px}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:9.5px;letter-spacing:.14em;color:var(--faint);margin-bottom:2px}
+  .field input,.field textarea{width:100%;border:1px solid var(--line2);background:#fffefb;padding:7px 8px;font-size:12.5px;outline:none;border-radius:0;line-height:1.6}
+  .field input:focus,.field textarea:focus{border-color:var(--ink)}
+  .field textarea{resize:vertical;min-height:56px}
+  .pw-wrap{display:flex;gap:6px}
+  .pw-wrap input{flex:1}
+  .pw-wrap button{flex:none;padding:0 10px;border:1px solid var(--line2);background:transparent;font-size:11px;color:var(--muted)}
+  .pw-wrap button:hover{border-color:var(--ink);color:var(--ink)}
+  .hint{font-size:10.5px;line-height:1.7;color:var(--faint);margin-top:8px}
+  .hint.warn{color:var(--accent)}
+  .remember{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--muted);cursor:pointer}
+  .remember input{width:13px;height:13px;accent-color:var(--ink)}
+
+  .checklist{display:grid;gap:5px;margin-bottom:14px}
+  .check{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted)}
+  .check i{width:6px;height:6px;border-radius:50%;background:#c9bfa9;flex:none}
+  .check.ok i{background:#5d7f62}
+  .check.bad i{background:var(--accent)}
+  .check.bad{color:var(--accent)}
+  .check.warn i{background:#b58a3a}
+  .check.warn{color:#8a6a2a}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;max-width:90vw;padding:10px 18px;background:var(--ink);color:var(--paper);font-size:12.5px;letter-spacing:.02em;box-shadow:0 10px 30px -12px rgba(0,0,0,.5)}
+
+  .meta-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:420px){.meta-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-cn">作品集</span>
+      <span class="brand-sub">作品管理台 · 仅在本机使用</span>
+    </div>
+    <div class="top-actions">
+      <span class="save-state" id="saveState">未保存</span>
+      <button class="btn ghost" id="btnOpen" type="button">打开项目文件夹</button>
+      <button class="btn ghost" id="btnImport" type="button">导入 JSON</button>
+      <button class="btn ghost" id="btnPreview" type="button">预览站点</button>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="col-main">
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <p class="dz-title">把作品图片拖到这里</p>
+      <p class="dz-sub">或点击选择 · 大图保留原尺寸、去掉拍摄信息、生成缩略图</p>
+    </div>
+
+    <div class="list-head">
+      <h2>作品 <span id="workCount">0 件</span></h2>
+      <button class="link-btn danger" id="btnClear" type="button">清空全部</button>
+    </div>
+
+    <div class="works" id="works"></div>
+    <div class="empty" id="empty">还没有作品。拖入图片，或先「打开项目文件夹」载入现有的 source/works.json。</div>
+
+    <datalist id="authorList"></datalist>
+  </section>
+
+  <aside class="col-side">
+    <section class="panel">
+      <h2 class="panel-title">站点信息</h2>
+      <div class="field">
+        <label for="metaTitle">站名</label>
+        <input id="metaTitle" type="text" placeholder="作品集">
+      </div>
+      <div class="field">
+        <label for="metaSubtitle">副标题</label>
+        <input id="metaSubtitle" type="text" placeholder="摄影存档">
+      </div>
+      <div class="field">
+        <label for="metaIntro">一句话介绍</label>
+        <textarea id="metaIntro" rows="3" placeholder="摄影作品记录……"></textarea>
+      </div>
+      <div class="field">
+        <label for="metaNotice">版权声明</label>
+        <textarea id="metaNotice" rows="3" placeholder="本页为个人摄影存档，截图作品由作者拍摄……"></textarea>
+      </div>
+      <div class="field">
+        <label for="metaContact">更新与联系</label>
+        <textarea id="metaContact" rows="2" placeholder="更新与联系说明……"></textarea>
+      </div>
+      <div class="field">
+        <label for="metaUpdated">更新日期</label>
+        <input id="metaUpdated" type="date">
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">访问口令</h2>
+      <div class="pw-wrap">
+        <input id="password" type="password" placeholder="设置一个口令" autocomplete="new-password">
+        <button id="pwToggle" type="button">显示</button>
+      </div>
+      <label class="remember"><input type="checkbox" id="pwRemember"> 记住口令（仅本机）</label>
+      <p class="hint">口令只用来加密页面数据，不会上传到任何服务器。建议 8 位以上，别用群名或生日。</p>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">发布</h2>
+      <div class="checklist" id="checklist"></div>
+      <button class="btn primary" id="btnSave" type="button">保存到项目文件夹</button>
+      <p class="hint" id="saveHint">第一次使用请先「打开项目文件夹」，选择 group-gallery 文件夹。</p>
+      <div style="display:grid;gap:6px;margin-top:10px">
+        <button class="btn ghost block" id="btnDownloadEnc" type="button">下载 works.enc.js</button>
+        <button class="btn ghost block" id="btnDownloadJson" type="button">下载 works.json</button>
+      </div>
+      <p class="hint">保存后，把 <b>site</b> 文件夹重新上传到 Cloudflare Pages 就更新了。admin.html 只留本机，不要上传。</p>
+    </section>
+  </aside>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var PASS_KEY = "gallery:admin:pass";
+  var MAX_FULL = 4096;
+  var MAX_THUMB = 1200;
+  var ext = supportsWebp() ? "webp" : "jpg";
+
+  var state = {
+    meta: {
+      title: "作品集",
+      subtitle: "摄影存档",
+      intro: "",
+      notice: "",
+      contact: "",
+      updatedAt: today()
+    },
+    works: [],
+    dir: null,
+    password: "",
+    dirty: false,
+    loaded: false,
+    saved: false,
+    busy: false
+  };
+
+  var els = {};
+
+  function $(s) { return document.querySelector(s); }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function monthNow() { return today().slice(0, 7); }
+  function supportsWebp() {
+    try {
+      var c = document.createElement("canvas");
+      c.width = c.height = 1;
+      return c.toDataURL("image/webp").indexOf("data:image/webp") === 0;
+    } catch (e) { return false; }
+  }
+  function uid() {
+    return "w" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+  function toast(msg) {
+    var t = els.toast;
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.hidden = true; }, 3200);
+  }
+  function markDirty() {
+    if (!state.dirty) {
+      state.dirty = true;
+      state.saved = false;
+      updateSaveState();
+    }
+    updateChecklist();
+  }
+  function updateSaveState() {
+    if (state.dirty) {
+      els.saveState.textContent = "有未保存的修改";
+      els.saveState.classList.add("dirty");
+    } else if (state.saved) {
+      els.saveState.textContent = "已保存";
+      els.saveState.classList.remove("dirty");
+    } else if (state.loaded) {
+      els.saveState.textContent = "已载入";
+      els.saveState.classList.remove("dirty");
+    } else {
+      els.saveState.textContent = "未保存";
+      els.saveState.classList.remove("dirty");
+    }
+  }
+
+  /* ---------------- 图片处理 ---------------- */
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("无法读取图片：" + file.name));
+      };
+      img.src = url;
+    });
+  }
+
+  function drawTo(img, maxEdge) {
+    var w = img.naturalWidth || img.width;
+    var h = img.naturalHeight || img.height;
+    var scale = Math.min(1, maxEdge / Math.max(w, h));
+    var canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(w * scale));
+    canvas.height = Math.max(1, Math.round(h * scale));
+    var ctx = canvas.getContext("2d");
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  }
+
+  function toBlob(canvas, quality) {
+    return new Promise(function (resolve) {
+      var type = ext === "webp" ? "image/webp" : "image/jpeg";
+      canvas.toBlob(function (blob) { resolve(blob); }, type, quality);
+    });
+  }
+
+  function averageColor(canvas) {
+    var c = document.createElement("canvas");
+    c.width = 20;
+    c.height = 20;
+    var ctx = c.getContext("2d");
+    ctx.drawImage(canvas, 0, 0, 20, 20);
+    var d = ctx.getImageData(0, 0, 20, 20).data;
+    var r = 0, g = 0, b = 0, n = d.length / 4;
+    for (var i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+    function hex(v) { return Math.round(v / n).toString(16).padStart(2, "0"); }
+    return "#" + hex(r) + hex(g) + hex(b);
+  }
+
+  function guessTitle(filename) {
+    var base = String(filename || "").replace(/\.[^.]+$/, "").trim();
+    if (!base) return "";
+    if (/^(IMG|DSC|DSCF|PXL|MVIMG|PANO|GOPR|DJI|Screenshot|Screen Shot|微信图片|mmexport|image)[-_ ]?\d/i.test(base)) return "";
+    if (/^\d+$/.test(base)) return "";
+    return base.replace(/[_-]+/g, " ").slice(0, 42);
+  }
+
+  async function makeWork(file) {
+    var img = await loadImage(file);
+    if (!img.naturalWidth) throw new Error("图片尺寸异常");
+    var full = drawTo(img, MAX_FULL);
+    var thumb = drawTo(img, MAX_THUMB);
+    var fullBlob = await toBlob(full, 0.95);
+    var thumbBlob = await toBlob(thumb, 0.85);
+    if (!fullBlob || !thumbBlob) throw new Error("浏览器不支持图片压缩");
+
+    var id = uid();
+    return {
+      id: id,
+      title: guessTitle(file.name),
+      author: state.lastAuthor || "",
+      date: monthNow(),
+      tags: [],
+      desc: "",
+      featured: false,
+      src: "media/" + id + "." + ext,
+      thumb: "media/" + id + "-t." + ext,
+      w: full.width,
+      h: full.height,
+      color: averageColor(thumb),
+      _files: {
+        fullName: id + "." + ext,
+        thumbName: id + "-t." + ext,
+        fullBlob: fullBlob,
+        thumbBlob: thumbBlob
+      }
+    };
+  }
+
+  async function removeDemoWorks() {
+    var demos = state.works.filter(function (w) { return w.demo; });
+    if (!demos.length) return;
+    state.works = state.works.filter(function (w) { return !w.demo; });
+
+    // 顺便删掉示例图片，避免它们继续占空间
+    if (state.dir) {
+      try {
+        var siteDir = await state.dir.getDirectoryHandle("site");
+        var mediaDir = await siteDir.getDirectoryHandle("media");
+        for (var i = 0; i < demos.length; i++) {
+          var w = demos[i];
+          var paths = [w.src, w.thumb];
+          for (var j = 0; j < paths.length; j++) {
+            var p = paths[j];
+            if (p && p.indexOf("media/") === 0) {
+              try { await mediaDir.removeEntry(p.slice(6)); } catch (e) {}
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    toast("示例作品已自动移除");
+  }
+
+  async function addFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList).filter(function (f) {
+      return f.type.indexOf("image/") === 0;
+    });
+    if (!files.length) { toast("请选择图片文件（JPG / PNG / WebP）"); return; }
+
+    state.busy = true;
+    els.dropzone.classList.add("is-busy");
+    var added = 0;
+
+    for (var i = 0; i < files.length; i++) {
+      els.dropzone.querySelector(".dz-title").textContent = "正在处理 " + (i + 1) + " / " + files.length + "…";
+      try {
+        var work = await makeWork(files[i]);
+        state.works.push(work);
+        state.lastAuthor = work.author || state.lastAuthor;
+        added++;
+      } catch (e) {
+        console.warn(e);
+        toast("跳过 " + files[i].name + "：" + e.message);
+      }
+    }
+
+    els.dropzone.querySelector(".dz-title").textContent = "把作品图片拖到这里";
+    els.dropzone.classList.remove("is-busy");
+    state.busy = false;
+    if (added && state.works.some(function (w) { return w.demo; })) {
+      await removeDemoWorks();
+    }
+    renderWorks();
+    markDirty();
+    if (added) toast("已加入 " + added + " 件作品");
+  }
+
+  /* ---------------- 渲染 ---------------- */
+  function thumbSrc(w) {
+    if (w._files) {
+      if (!w._thumbUrl) w._thumbUrl = URL.createObjectURL(w._files.thumbBlob);
+      return w._thumbUrl;
+    }
+    return "site/" + (w.thumb || w.src || "");
+  }
+
+  function workRow(w, index) {
+    var row = el("article", "work");
+    row.dataset.id = w.id;
+
+    var thumb = el("div", "work-thumb");
+    var img = document.createElement("img");
+    img.src = thumbSrc(w);
+    img.alt = "";
+    img.loading = "lazy";
+    img.onerror = function () { img.style.opacity = "0"; };
+    thumb.appendChild(img);
+
+    var body = el("div", "work-body");
+    var fields = el("div", "fields");
+
+    function field(labelText, key, type, placeholder, wide) {
+      var label = el("label", wide ? "wide" : "");
+      label.appendChild(el("span", "lbl", labelText));
+      var input = document.createElement("input");
+      input.type = type || "text";
+      input.value = key === "tags" ? (w.tags || []).join(", ") : w[key] || "";
+      input.placeholder = placeholder || "";
+      if (key === "author") input.setAttribute("list", "authorList");
+      input.addEventListener("input", function () {
+        if (key === "tags") {
+          w.tags = input.value.split(/[,，、\s]+/).filter(Boolean);
+        } else {
+          w[key] = input.value;
+        }
+        if (key === "author" && input.value.trim()) state.lastAuthor = input.value.trim();
+        markDirty();
+      });
+      label.appendChild(input);
+      fields.appendChild(label);
+    }
+
+    field("标题", "title", "text", "无题");
+    field("作者", "author", "text", "群昵称");
+    field("日期", "date", "date", "");
+    field("标签", "tags", "text", "摄影, 城市（逗号分隔）", true);
+    field("一句话说明", "desc", "text", "可不填", true);
+
+    var featured = el("label", "featured");
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!w.featured;
+    cb.addEventListener("change", function () { w.featured = cb.checked; markDirty(); });
+    featured.appendChild(cb);
+    featured.appendChild(document.createTextNode("设为精选"));
+
+    body.appendChild(fields);
+    body.appendChild(featured);
+
+    var actions = el("div", "work-actions");
+    var up = el("button", "", "↑");
+    up.type = "button";
+    up.title = "上移";
+    up.disabled = index === 0;
+    up.addEventListener("click", function () { move(index, -1); });
+
+    var down = el("button", "", "↓");
+    down.type = "button";
+    down.title = "下移";
+    down.disabled = index === state.works.length - 1;
+    down.addEventListener("click", function () { move(index, 1); });
+
+    var del = el("button", "", "✕");
+    del.type = "button";
+    del.dataset.act = "del";
+    del.title = "删除";
+    del.addEventListener("click", function () {
+      if (!confirm("删除《" + (w.title || "无题") + "》？")) return;
+      state.works.splice(index, 1);
+      renderWorks();
+      markDirty();
+    });
+
+    actions.appendChild(up);
+    actions.appendChild(down);
+    actions.appendChild(del);
+
+    row.appendChild(thumb);
+    row.appendChild(body);
+    row.appendChild(actions);
+    return row;
+  }
+
+  function move(index, delta) {
+    var target = index + delta;
+    if (target < 0 || target >= state.works.length) return;
+    var tmp = state.works[index];
+    state.works[index] = state.works[target];
+    state.works[target] = tmp;
+    renderWorks();
+    markDirty();
+  }
+
+  function renderWorks() {
+    els.works.innerHTML = "";
+    state.works.forEach(function (w, i) {
+      els.works.appendChild(workRow(w, i));
+    });
+    els.empty.hidden = state.works.length > 0;
+    els.workCount.textContent = state.works.length + " 件";
+    els.btnClear.hidden = state.works.length === 0;
+
+    var authors = {};
+    state.works.forEach(function (w) { if (w.author) authors[w.author] = 1; });
+    els.authorList.innerHTML = "";
+    Object.keys(authors).forEach(function (a) {
+      var opt = document.createElement("option");
+      opt.value = a;
+      els.authorList.appendChild(opt);
+    });
+
+    updateChecklist();
+  }
+
+  function updateChecklist() {
+    var missingAuthor = state.works.filter(function (w) { return !(w.author || "").trim(); }).length;
+    var missingTitle = state.works.filter(function (w) { return !(w.title || "").trim(); }).length;
+    var items = [
+      {
+        level: state.works.length > 0 ? "ok" : "bad",
+        text: state.works.length ? state.works.length + " 件作品" : "还没有作品"
+      }
+    ];
+    if (state.works.length) {
+      items.push({
+        level: missingAuthor === 0 ? "ok" : "bad",
+        text: missingAuthor ? missingAuthor + " 件缺署名" : "署名齐全"
+      });
+      items.push({
+        level: missingTitle === 0 ? "ok" : "warn",
+        text: missingTitle ? missingTitle + " 件未命名，将显示「无题」" : "标题齐全"
+      });
+    }
+    items.push({
+      level: state.password.length >= 6 ? "ok" : "warn",
+      text: state.password.length >= 6 ? "口令长度合适" : "建议口令 8 位以上"
+    });
+    els.checklist.innerHTML = "";
+    items.forEach(function (it) {
+      var row = el("div", "check " + it.level);
+      row.appendChild(document.createElement("i"));
+      row.appendChild(document.createTextNode(it.text));
+      els.checklist.appendChild(row);
+    });
+  }
+
+  /* ---------------- 数据导入导出 ---------------- */
+  function normalizeWork(w) {
+    return {
+      id: w.id || uid(),
+      title: w.title || "",
+      author: w.author || "",
+      date: w.date || "",
+      tags: Array.isArray(w.tags) ? w.tags.slice() : [],
+      desc: w.desc || "",
+      featured: !!w.featured,
+      demo: !!w.demo,
+      src: w.src || "",
+      thumb: w.thumb || "",
+      w: w.w || 0,
+      h: w.h || 0,
+      color: w.color || "#e3dccd"
+    };
+  }
+
+  function loadData(data, message) {
+    data = data || {};
+    var meta = data.meta || {};
+    state.meta = {
+      title: meta.title || "作品集",
+      subtitle: meta.subtitle || "摄影存档",
+      intro: meta.intro || "",
+      notice: meta.notice || "",
+      contact: meta.contact || "",
+      updatedAt: meta.updatedAt || today()
+    };
+    state.works = (data.works || []).map(normalizeWork);
+
+    // 个人页只有一个作者：新图默认沿用现有署名
+    var authorCount = {};
+    state.works.forEach(function (w) {
+      if (w.author) authorCount[w.author] = (authorCount[w.author] || 0) + 1;
+    });
+    var topAuthor = Object.keys(authorCount).sort(function (a, b) {
+      return authorCount[b] - authorCount[a];
+    })[0];
+    state.lastAuthor = topAuthor || "";
+
+    fillMeta();
+    renderWorks();
+    state.dirty = false;
+    state.loaded = true;
+    state.saved = false;
+    updateSaveState();
+    if (message) toast(message);
+  }
+
+  function fillMeta() {
+    els.metaTitle.value = state.meta.title;
+    els.metaSubtitle.value = state.meta.subtitle;
+    els.metaIntro.value = state.meta.intro;
+    els.metaNotice.value = state.meta.notice;
+    els.metaContact.value = state.meta.contact;
+    els.metaUpdated.value = state.meta.updatedAt;
+  }
+
+  function buildData() {
+    return {
+      meta: {
+        title: state.meta.title.trim() || "作品集",
+        subtitle: state.meta.subtitle.trim() || "摄影存档",
+        intro: state.meta.intro.trim(),
+        notice: state.meta.notice.trim(),
+        contact: state.meta.contact.trim(),
+        updatedAt: state.meta.updatedAt || today()
+      },
+      works: state.works.map(function (w) {
+        var out = {
+          id: w.id,
+          title: (w.title || "").trim() || "无题",
+          author: (w.author || "").trim() || "佚名",
+          date: w.date || "",
+          tags: w.tags || [],
+          desc: (w.desc || "").trim(),
+          src: w.src,
+          thumb: w.thumb,
+          w: w.w,
+          h: w.h,
+          color: w.color,
+          featured: !!w.featured,
+          demo: !!w.demo
+        };
+        if (out.thumb === out.src) delete out.thumb;
+        return out;
+      })
+    };
+  }
+
+  function b64(buf) {
+    var bytes = new Uint8Array(buf);
+    var s = "";
+    for (var i = 0; i < bytes.length; i += 0x8000) {
+      s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(s);
+  }
+
+  async function encryptData(data, password) {
+    var salt = crypto.getRandomValues(new Uint8Array(16));
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var encoder = new TextEncoder();
+    var base = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]);
+    var key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: salt, iterations: 210000, hash: "SHA-256" },
+      base,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt"]
+    );
+    var cipher = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: iv },
+      key,
+      encoder.encode(JSON.stringify(data))
+    );
+    return {
+      v: 1,
+      alg: "AES-GCM",
+      kdf: "PBKDF2-SHA-256",
+      iterations: 210000,
+      salt: b64(salt),
+      iv: b64(iv),
+      ciphertext: b64(cipher),
+      demo: false
+    };
+  }
+
+  async function buildExport() {
+    if (!state.works.length) throw new Error("还没有作品");
+    if (!state.password || state.password.length < 3) throw new Error("请设置至少 3 位访问口令（建议 6 位以上）");
+    if (!window.crypto || !window.crypto.subtle) throw new Error("当前环境无法加密，请用 Edge / Chrome 打开");
+
+    var data = buildData();
+    var payload = await encryptData(data, state.password);
+    var encJs =
+      "/* 由 admin.html 生成，请勿手改 */\n" +
+      "window.__GALLERY_DATA__ = " + JSON.stringify(payload) + ";\n";
+    return { data: data, encJs: encJs, json: JSON.stringify(data, null, 2) };
+  }
+
+  /* ---------------- 文件夹读写 ---------------- */
+  async function chooseFolder() {
+    if (!window.showDirectoryPicker) {
+      toast("这个浏览器不支持直接写文件夹，请用 Edge / Chrome，或使用下载按钮。");
+      return false;
+    }
+    try {
+      var dir = await window.showDirectoryPicker({ mode: "readwrite", id: "gallery-admin" });
+      try {
+        await dir.getDirectoryHandle("site");
+      } catch (e) {
+        toast("请选择 group-gallery 文件夹（里面要有 site 和 source）。");
+        return false;
+      }
+      state.dir = dir;
+      return true;
+    } catch (e) {
+      if (e.name !== "AbortError") toast("打开文件夹失败：" + e.message);
+      return false;
+    }
+  }
+
+  async function writeFile(dir, name, blobOrText) {
+    var fh = await dir.getFileHandle(name, { create: true });
+    var writable = await fh.createWritable();
+    await writable.write(blobOrText);
+    await writable.close();
+  }
+
+  async function openProject() {
+    if (state.dirty && !confirm("当前有未保存的修改，打开项目会覆盖它们，继续？")) return;
+    if (!(await chooseFolder())) return;
+
+    try {
+      var sourceDir = await state.dir.getDirectoryHandle("source");
+      var fh = await sourceDir.getFileHandle("works.json");
+      var file = await fh.getFile();
+      var data = JSON.parse(await file.text());
+      loadData(data, "已载入项目里的 source/works.json");
+    } catch (e) {
+      toast("文件夹已打开，但没找到 source/works.json，可以导入或直接添加作品。");
+      updateSaveState();
+    }
+  }
+
+  async function saveProject() {
+    if (state.busy) return;
+
+    if (!state.loaded) {
+      var goOn = confirm(
+        "你还没有点「打开项目文件夹」载入现有作品。\n\n" +
+        "继续保存会只保留当前列表，可能覆盖掉线上已有的作品和站点信息。\n\n" +
+        "建议先取消 → 打开项目文件夹 → 再加新图。\n\n" +
+        "确定要继续保存吗？"
+      );
+      if (!goOn) return;
+    }
+
+    if (!state.dir) {
+      if (!(await chooseFolder())) return;
+    }
+
+    var payload;
+    try {
+      payload = await buildExport();
+    } catch (e) {
+      toast(e.message);
+      return;
+    }
+
+    state.busy = true;
+    els.btnSave.disabled = true;
+    els.btnSave.textContent = "正在写入…";
+
+    try {
+      var siteDir = await state.dir.getDirectoryHandle("site");
+      var mediaDir = await siteDir.getDirectoryHandle("media", { create: true });
+      var dataDir = await siteDir.getDirectoryHandle("data", { create: true });
+      var sourceDir = await state.dir.getDirectoryHandle("source", { create: true });
+
+      for (var i = 0; i < state.works.length; i++) {
+        var w = state.works[i];
+        if (!w._files) continue;
+        await writeFile(mediaDir, w._files.fullName, w._files.fullBlob);
+        await writeFile(mediaDir, w._files.thumbName, w._files.thumbBlob);
+      }
+
+      await writeFile(dataDir, "works.enc.js", payload.encJs);
+      await writeFile(sourceDir, "works.json", payload.json);
+
+      state.dirty = false;
+      state.saved = true;
+      updateSaveState();
+      toast("已保存。下一步：把 site 文件夹重新上传到 Cloudflare Pages。");
+    } catch (e) {
+      console.error(e);
+      toast("写入失败：" + e.message);
+    } finally {
+      state.busy = false;
+      els.btnSave.disabled = false;
+      els.btnSave.textContent = "保存到项目文件夹";
+    }
+  }
+
+  function download(name, text, type) {
+    var blob = new Blob([text], { type: type || "text/plain;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  function bind() {
+    els.dropzone.addEventListener("click", function () { els.fileInput.click(); });
+    els.fileInput.addEventListener("change", function () {
+      addFiles(els.fileInput.files);
+      els.fileInput.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach(function (type) {
+      els.dropzone.addEventListener(type, function (e) {
+        e.preventDefault();
+        els.dropzone.classList.add("is-over");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (type) {
+      els.dropzone.addEventListener(type, function (e) {
+        e.preventDefault();
+        els.dropzone.classList.remove("is-over");
+      });
+    });
+    els.dropzone.addEventListener("drop", function (e) {
+      if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+    });
+
+    els.btnOpen.addEventListener("click", openProject);
+    els.btnSave.addEventListener("click", saveProject);
+    els.btnPreview.addEventListener("click", function () {
+      window.open("site/index.html", "_blank");
+    });
+
+    els.btnImport.addEventListener("click", function () {
+      var input = document.createElement("input");
+      input.type = "file";
+      input.accept = "application/json,.json";
+      input.addEventListener("change", function () {
+        var file = input.files[0];
+        if (!file) return;
+        file.text().then(function (text) {
+          try {
+            loadData(JSON.parse(text), "已导入 " + file.name);
+            state.dir = null;
+          } catch (e) {
+            toast("JSON 解析失败：" + e.message);
+          }
+        });
+      });
+      input.click();
+    });
+
+    els.btnClear.addEventListener("click", function () {
+      if (!state.works.length) return;
+      if (!confirm("清空全部 " + state.works.length + " 件作品？这个操作不能撤销。")) return;
+      state.works = [];
+      renderWorks();
+      markDirty();
+    });
+
+    els.btnDownloadEnc.addEventListener("click", async function () {
+      try {
+        var p = await buildExport();
+        download("works.enc.js", p.encJs, "text/javascript;charset=utf-8");
+        toast("已下载 works.enc.js，把它放到 site/data/ 覆盖旧文件。");
+      } catch (e) { toast(e.message); }
+    });
+
+    els.btnDownloadJson.addEventListener("click", async function () {
+      try {
+        var p = await buildExport();
+        download("works.json", p.json, "application/json;charset=utf-8");
+        toast("已下载 works.json，把它放到 source/ 覆盖旧文件。");
+      } catch (e) { toast(e.message); }
+    });
+
+    els.pwToggle.addEventListener("click", function () {
+      var isPw = els.password.type === "password";
+      els.password.type = isPw ? "text" : "password";
+      els.pwToggle.textContent = isPw ? "隐藏" : "显示";
+    });
+
+    els.password.addEventListener("input", function () {
+      state.password = els.password.value;
+      if (els.pwRemember.checked) {
+        try { localStorage.setItem(PASS_KEY, state.password); } catch (e) {}
+      }
+      markDirty();
+    });
+
+    els.pwRemember.addEventListener("change", function () {
+      try {
+        if (els.pwRemember.checked) localStorage.setItem(PASS_KEY, state.password);
+        else localStorage.removeItem(PASS_KEY);
+      } catch (e) {}
+    });
+
+    [["metaTitle", "title"], ["metaSubtitle", "subtitle"], ["metaIntro", "intro"],
+     ["metaNotice", "notice"], ["metaContact", "contact"], ["metaUpdated", "updatedAt"]]
+      .forEach(function (pair) {
+        var node = els[pair[0]];
+        node.addEventListener("input", function () {
+          state.meta[pair[1]] = node.value;
+          markDirty();
+        });
+      });
+
+    document.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        saveProject();
+      }
+    });
+
+    window.addEventListener("beforeunload", function (e) {
+      if (state.dirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    });
+  }
+
+  function init() {
+    els = {
+      dropzone: $("#dropzone"),
+      fileInput: $("#fileInput"),
+      works: $("#works"),
+      empty: $("#empty"),
+      workCount: $("#workCount"),
+      authorList: $("#authorList"),
+      checklist: $("#checklist"),
+      saveState: $("#saveState"),
+      btnOpen: $("#btnOpen"),
+      btnImport: $("#btnImport"),
+      btnPreview: $("#btnPreview"),
+      btnClear: $("#btnClear"),
+      btnSave: $("#btnSave"),
+      btnDownloadEnc: $("#btnDownloadEnc"),
+      btnDownloadJson: $("#btnDownloadJson"),
+      saveHint: $("#saveHint"),
+      password: $("#password"),
+      pwToggle: $("#pwToggle"),
+      pwRemember: $("#pwRemember"),
+      metaTitle: $("#metaTitle"),
+      metaSubtitle: $("#metaSubtitle"),
+      metaIntro: $("#metaIntro"),
+      metaNotice: $("#metaNotice"),
+      metaContact: $("#metaContact"),
+      metaUpdated: $("#metaUpdated"),
+      toast: $("#toast")
+    };
+
+    fillMeta();
+    bind();
+    renderWorks();
+    updateSaveState();
+
+    try {
+      var saved = localStorage.getItem(PASS_KEY);
+      if (saved) {
+        state.password = saved;
+        els.password.value = saved;
+        els.pwRemember.checked = true;
+      }
+    } catch (e) {}
+
+    updateChecklist();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

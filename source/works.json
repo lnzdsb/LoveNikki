@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "title": "作品集",
+    "subtitle": "摄影存档",
+    "intro": "个人的摄影作品存档，把喜欢的照片、截图收在一起。点开看大图。",
+    "notice": "本页为个人作品存档，版权归作者所有。未经作者同意，请勿转载或商用。",
+    "contact": "更新与联系：由站长整理。",
+    "updatedAt": "2026-10-23"
+  },
+  "works": [
+    {
+      "id": "demo-01",
+      "title": "示例作品 01",
+      "author": "示例作者",
+      "date": "2026-01",
+      "tags": [
+        "示例",
+        "风景"
+      ],
+      "desc": "模板自带的示例作品；上传第一张自己的图后会自动移除。",
+      "src": "media/demo-01.webp",
+      "thumb": "media/demo-01-t.webp",
+      "w": 1500,
+      "h": 1000,
+      "color": "#676c5f",
+      "featured": false,
+      "demo": true
+    },
+    {
+      "id": "demo-02",
+      "title": "示例作品 02",
+      "author": "示例作者",
+      "date": "2026-01",
+      "tags": [
+        "示例",
+        "风景"
+      ],
+      "desc": "模板自带的示例作品；上传第一张自己的图后会自动移除。",
+      "src": "media/demo-02.webp",
+      "thumb": "media/demo-02-t.webp",
+      "w": 1200,
+      "h": 1500,
+      "color": "#2a2624",
+      "featured": false,
+      "demo": true
+    },
+    {
+      "id": "demo-03",
+      "title": "示例作品 03",
+      "author": "示例作者",
+      "date": "2026-01",
+      "tags": [
+        "示例",
+        "风景"
+      ],
+      "desc": "模板自带的示例作品；上传第一张自己的图后会自动移除。",
+      "src": "media/demo-03.webp",
+      "thumb": "media/demo-03-t.webp",
+      "w": 1200,
+      "h": 1500,
+      "color": "#ded1be",
+      "featured": false,
+      "demo": true
+    },
+    {
+      "id": "demo-04",
+      "title": "示例作品 04",
+      "author": "示例作者",
+      "date": "2026-01",
+      "tags": [
+        "示例",
+        "人像"
+      ],
+      "desc": "模板自带的示例作品；上传第一张自己的图后会自动移除。",
+      "src": "media/demo-04.webp",
+      "thumb": "media/demo-04-t.webp",
+      "w": 1500,
+      "h": 1000,
+      "color": "#686661",
+      "featured": false,
+      "demo": true
+    },
+    {
+      "id": "demo-05",
+      "title": "示例作品 05",
+      "author": "示例作者",
+      "date": "2026-01",
+      "tags": [
+        "示例",
+        "人像"
+      ],
+      "desc": "模板自带的示例作品；上传第一张自己的图后会自动移除。",
+      "src": "media/demo-05.webp",
+      "thumb": "media/demo-05-t.webp",
+      "w": 1499,
+      "h": 1499,
+      "color": "#ad9e89",
+      "featured": false,
+      "demo": true
+    }
+  ]
+}

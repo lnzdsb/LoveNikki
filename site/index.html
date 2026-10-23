@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f6f2e9">
+<title>作品集 · 摄影存档</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23a83e2a'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23f6f2e9' font-family='serif'%3E集%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body class="is-gate">
+
+<a class="skip-link" href="#main">跳到作品</a>
+
+<!-- ========== 口令 ========== -->
+<div class="gate" id="gate">
+  <div class="gate-panel">
+    <p class="gate-kicker">PHOTO ARCHIVE</p>
+    <h1 class="gate-title" id="gateTitle">作品集</h1>
+    <p class="gate-sub" id="gateSub">摄影存档</p>
+
+    <form class="gate-form" id="gateForm" novalidate>
+      <label class="gate-label" for="gateInput">访问口令</label>
+      <div class="gate-input-wrap">
+        <input class="gate-input" id="gateInput" type="password" name="password"
+               autocomplete="current-password" placeholder="请输入访问口令" required>
+        <button class="gate-pw-toggle" id="gatePwToggle" type="button">显示</button>
+      </div>
+      <p class="gate-error" id="gateError" role="alert" hidden></p>
+      <button class="gate-btn" id="gateBtn" type="submit">进入</button>
+      <label class="gate-remember">
+        <input type="checkbox" id="gateRemember" checked>
+        <span>本次浏览记住口令</span>
+      </label>
+    </form>
+
+    <p class="gate-hint" id="gateHint">口令由站长保管；中文口令可点「显示」输入</p>
+    <p class="gate-demo" id="gateDemoHint" hidden>示例版口令：<b>demo1234</b>，正式使用前请更换</p>
+  </div>
+</div>
+
+<!-- ========== 页面 ========== -->
+<div class="app" id="app" hidden>
+  <header class="masthead" id="masthead">
+    <div class="masthead-inner">
+      <a class="brand" href="#top">
+        <span class="brand-cn" id="brandCn">作品集</span>
+        <span class="brand-en">PHOTO&nbsp;ARCHIVE</span>
+      </a>
+      <div class="masthead-actions">
+        <span class="top-count" id="topCount"></span>
+        <button class="text-btn" id="aboutBtn" type="button">关于</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <p class="hero-kicker"><span class="seal" aria-hidden="true"></span>摄影存档<span class="dot">·</span><span id="updatedAt"></span></p>
+      <h1 class="hero-title" id="siteTitle">作品集</h1>
+      <p class="hero-sub" id="siteSubtitle"></p>
+      <p class="hero-intro" id="siteIntro"></p>
+    </section>
+
+    <section class="toolbar" id="toolbar" aria-label="筛选与排序">
+      <div class="toolbar-top">
+        <div class="search">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <input id="searchInput" type="search" placeholder="搜作品、作者、标签" autocomplete="off" aria-label="搜索作品">
+        </div>
+        <div class="toolbar-end">
+          <span class="result-count" id="resultCount" aria-live="polite"></span>
+          <label class="select-wrap">
+            <span class="sr-only">排序方式</span>
+            <select id="sortSelect">
+              <option value="date">最新</option>
+              <option value="title">按标题</option>
+              <option value="author">按作者</option>
+            </select>
+          </label>
+          <button class="clear-btn" id="clearBtn" type="button" hidden>清除筛选</button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <div class="chip-row" id="authorRow">
+          <span class="chip-label">作者</span>
+          <div class="chips" id="authorChips" role="group" aria-label="按作者筛选"></div>
+        </div>
+        <div class="chip-row" id="tagRow">
+          <span class="chip-label">标签</span>
+          <div class="chips" id="tagChips" role="group" aria-label="按标签筛选"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" id="grid" aria-label="作品列表"></section>
+
+    <div class="empty" id="empty" hidden>
+      <p class="empty-title">没有找到符合条件的作品</p>
+      <p class="empty-sub">换个关键词，或清除筛选条件再看看。</p>
+      <button class="empty-btn" id="emptyClear" type="button">清除筛选</button>
+    </div>
+
+    <footer class="footer">
+      <p class="footer-notice" id="notice"></p>
+      <p class="footer-contact" id="contact"></p>
+      <p class="footer-meta"><span id="year"></span> · 作品集 · 由站长整理维护</p>
+    </footer>
+  </main>
+</div>
+
+<!-- ========== 灯箱 ========== -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="作品查看">
+  <div class="lb-top">
+    <span class="lb-counter" id="lbCounter"></span>
+    <button class="lb-close" id="lbClose" type="button" aria-label="关闭">关闭 <span aria-hidden="true">✕</span></button>
+  </div>
+  <div class="lb-body">
+    <button class="lb-nav lb-prev" id="lbPrev" type="button" aria-label="上一件">←</button>
+    <div class="lb-stage">
+      <img id="lbImg" alt="">
+    </div>
+    <button class="lb-nav lb-next" id="lbNext" type="button" aria-label="下一件">→</button>
+  </div>
+  <aside class="lb-info">
+    <h2 class="lb-title" id="lbTitle"></h2>
+    <p class="lb-meta"><span id="lbAuthor"></span><span class="dot">·</span><span id="lbDate"></span></p>
+    <p class="lb-desc" id="lbDesc"></p>
+    <ul class="lb-tags" id="lbTags"></ul>
+    <p class="lb-copy">版权归作者所有，未经同意请勿转载。</p>
+  </aside>
+</div>
+
+<!-- ========== 关于 ========== -->
+<div class="about" id="about" hidden role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+  <div class="about-panel">
+    <p class="about-kicker">ABOUT</p>
+    <h2 class="about-title" id="aboutTitle">关于这个页面</h2>
+    <p class="about-text">这是一个个人的摄影作品存档页：把喜欢的照片、截图收在一起，方便回看。</p>
+    <h3 class="about-h">版权与使用</h3>
+    <p class="about-text" id="aboutNotice"></p>
+    <h3 class="about-h">更新与联系</h3>
+    <p class="about-text" id="aboutContact"></p>
+    <h3 class="about-h">关于图片</h3>
+    <p class="about-text">页面里是压缩后的展示图，方便手机打开，<b>不是原图备份</b>；原图请作者自己留存。上传时会自动去掉照片里的拍摄信息。</p>
+    <h3 class="about-h">关于口令</h3>
+    <p class="about-text">口令由站长保管。如果口令外流，站长可以换一个，然后重新导出一次数据。</p>
+    <button class="about-close" id="aboutClose" type="button">知道了</button>
+  </div>
+</div>
+
+<noscript>
+  <div class="noscript">这个页面需要开启 JavaScript 才能显示作品。</div>
+</noscript>
+
+<script src="data/works.enc.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
