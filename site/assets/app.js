@@ -95,9 +95,20 @@
 
   /* ---------- 解密 ---------- */
   function decryptData(payload, password) {
-    var salt = b64ToBytes(payload.salt);
-    var iv = b64ToBytes(payload.iv);
-    var cipher = b64ToBytes(payload.ciphertext);
+    if (!payload || !payload.salt || !payload.iv || !payload.ciphertext) {
+      return Promise.reject(new Error("bad-payload"));
+    }
+    var salt, iv, cipher;
+    try {
+      salt = b64ToBytes(payload.salt);
+      iv = b64ToBytes(payload.iv);
+      cipher = b64ToBytes(payload.ciphertext);
+    } catch (e) {
+      return Promise.reject(new Error("bad-payload"));
+    }
+    if (!salt.length || !iv.length || !cipher.length) {
+      return Promise.reject(new Error("bad-payload"));
+    }
     var enc = new TextEncoder();
 
     return window.crypto.subtle
@@ -125,6 +136,19 @@
   }
 
   /* ---------- 口令面板 ---------- */
+  function decryptErrorText(err) {
+    if (err && err.message === "bad-payload") {
+      return "数据文件不完整或版本不对，请重新上传 site/data/works.enc.js。";
+    }
+    if (err instanceof SyntaxError) {
+      return "数据文件损坏，无法读取作品列表。";
+    }
+    if (err && err.name === "OperationError") {
+      return "口令不对，或数据文件损坏/上传不完整。";
+    }
+    return "打开失败：" + (err && err.message ? err.message : "未知错误") + "。";
+  }
+
   function showGateError(msg) {
     els.gateError.textContent = msg;
     els.gateError.hidden = false;
@@ -188,9 +212,9 @@
         }
         enter(d);
       })
-      .catch(function () {
+      .catch(function (err) {
         resetGate();
-        showGateError("口令不对，再试一次。");
+        showGateError(decryptErrorText(err));
         shakeGate();
         els.gateInput.select();
       });
@@ -291,9 +315,10 @@
       els.gateBtn.textContent = "正在打开…";
       decryptData(window.__GALLERY_DATA__, saved)
         .then(function (d) { enter(d); })
-        .catch(function () {
+        .catch(function (err) {
           try { window.sessionStorage.removeItem(CFG.storageKey); } catch (e) {}
           resetGate();
+          showGateError(decryptErrorText(err));
           els.gateInput.focus();
         });
     } else {

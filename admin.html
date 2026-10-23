@@ -133,7 +133,7 @@
     <div class="dropzone" id="dropzone">
       <input type="file" id="fileInput" accept="image/*" multiple hidden>
       <p class="dz-title">把作品图片拖到这里</p>
-      <p class="dz-sub">或点击选择 · 大图保留原尺寸、去掉拍摄信息、生成缩略图</p>
+      <p class="dz-sub">或点击选择 · 大图保留原文件、生成缩略图</p>
     </div>
 
     <div class="list-head">
@@ -190,7 +190,7 @@
       <h2 class="panel-title">发布</h2>
       <div class="checklist" id="checklist"></div>
       <button class="btn primary" id="btnSave" type="button">保存到项目文件夹</button>
-      <p class="hint" id="saveHint">第一次使用请先「打开项目文件夹」，选择 group-gallery 文件夹。</p>
+      <p class="hint" id="saveHint">第一次使用请先「打开项目文件夹」，选择项目文件夹（里面要有 site 和 source）。</p>
       <div style="display:grid;gap:6px;margin-top:10px">
         <button class="btn ghost block" id="btnDownloadEnc" type="button">下载 works.enc.js</button>
         <button class="btn ghost block" id="btnDownloadJson" type="button">下载 works.json</button>
@@ -207,7 +207,6 @@
   "use strict";
 
   var PASS_KEY = "gallery:admin:pass";
-  var MAX_FULL = 4096;
   var MAX_THUMB = 1200;
   var ext = supportsWebp() ? "webp" : "jpg";
 
@@ -242,7 +241,12 @@
     var d = new Date();
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
-  function monthNow() { return today().slice(0, 7); }
+  function normalizeDate(v) {
+    v = String(v || "").trim().replace(/\./g, "-");
+    if (/^\d{4}-\d{2}$/.test(v)) return v + "-01";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    return "";
+  }
   function supportsWebp() {
     try {
       var c = document.createElement("canvas");
@@ -342,33 +346,50 @@
     return base.replace(/[_-]+/g, " ").slice(0, 42);
   }
 
+  function originalExt(file) {
+    var map = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif",
+      "image/avif": "avif"
+    };
+    if (map[file.type]) return map[file.type];
+    var m = /\.([a-zA-Z0-9]+)$/.exec(file.name || "");
+    return m ? m[1].toLowerCase() : "jpg";
+  }
+
   async function makeWork(file) {
+    if (file.size > 25 * 1024 * 1024) {
+      throw new Error("原图超过 25MB，Cloudflare Pages 放不下");
+    }
     var img = await loadImage(file);
     if (!img.naturalWidth) throw new Error("图片尺寸异常");
-    var full = drawTo(img, MAX_FULL);
+
+    // 大图直接复制原文件，不重编码；只生成缩略图
     var thumb = drawTo(img, MAX_THUMB);
-    var fullBlob = await toBlob(full, 0.95);
     var thumbBlob = await toBlob(thumb, 0.85);
-    if (!fullBlob || !thumbBlob) throw new Error("浏览器不支持图片压缩");
+    if (!thumbBlob) throw new Error("浏览器不支持缩略图生成");
 
     var id = uid();
+    var originalName = id + "." + originalExt(file);
     return {
       id: id,
       title: guessTitle(file.name),
       author: state.lastAuthor || "",
-      date: monthNow(),
+      date: today(),
       tags: [],
       desc: "",
       featured: false,
-      src: "media/" + id + "." + ext,
+      src: "media/" + originalName,
       thumb: "media/" + id + "-t." + ext,
-      w: full.width,
-      h: full.height,
+      w: img.naturalWidth,
+      h: img.naturalHeight,
       color: averageColor(thumb),
       _files: {
-        fullName: id + "." + ext,
+        fullName: originalName,
         thumbName: id + "-t." + ext,
-        fullBlob: fullBlob,
+        fullBlob: file,
         thumbBlob: thumbBlob
       }
     };
@@ -379,24 +400,12 @@
     if (!demos.length) return;
     state.works = state.works.filter(function (w) { return !w.demo; });
 
-    // 顺便删掉示例图片，避免它们继续占空间
-    if (state.dir) {
-      try {
-        var siteDir = await state.dir.getDirectoryHandle("site");
-        var mediaDir = await siteDir.getDirectoryHandle("media");
-        for (var i = 0; i < demos.length; i++) {
-          var w = demos[i];
-          var paths = [w.src, w.thumb];
-          for (var j = 0; j < paths.length; j++) {
-            var p = paths[j];
-            if (p && p.indexOf("media/") === 0) {
-              try { await mediaDir.removeEntry(p.slice(6)); } catch (e) {}
-            }
-          }
-        }
-      } catch (e) {}
-    }
-    toast("示例作品已自动移除");
+    // 只从列表移除；文件在保存时由 saveProject 统一清理。
+    // 这样误加一张图但没保存，示例文件不会被提前删掉。
+    demos.forEach(function (w) {
+      if (w._thumbUrl) { URL.revokeObjectURL(w._thumbUrl); w._thumbUrl = null; }
+    });
+    toast("示例作品已从列表移除，保存后会清理示例文件");
   }
 
   async function addFiles(fileList) {
@@ -462,7 +471,9 @@
       label.appendChild(el("span", "lbl", labelText));
       var input = document.createElement("input");
       input.type = type || "text";
-      input.value = key === "tags" ? (w.tags || []).join(", ") : w[key] || "";
+      input.value = key === "tags" ? (w.tags || []).join(", ")
+        : key === "date" ? normalizeDate(w[key])
+        : w[key] || "";
       input.placeholder = placeholder || "";
       if (key === "author") input.setAttribute("list", "authorList");
       input.addEventListener("input", function () {
@@ -514,6 +525,7 @@
     del.title = "删除";
     del.addEventListener("click", function () {
       if (!confirm("删除《" + (w.title || "无题") + "》？")) return;
+      if (w._thumbUrl) { URL.revokeObjectURL(w._thumbUrl); w._thumbUrl = null; }
       state.works.splice(index, 1);
       renderWorks();
       markDirty();
@@ -598,7 +610,7 @@
       id: w.id || uid(),
       title: w.title || "",
       author: w.author || "",
-      date: w.date || "",
+      date: normalizeDate(w.date),
       tags: Array.isArray(w.tags) ? w.tags.slice() : [],
       desc: w.desc || "",
       featured: !!w.featured,
@@ -620,7 +632,7 @@
       intro: meta.intro || "",
       notice: meta.notice || "",
       contact: meta.contact || "",
-      updatedAt: meta.updatedAt || today()
+      updatedAt: normalizeDate(meta.updatedAt) || today()
     };
     state.works = (data.works || []).map(normalizeWork);
 
@@ -649,7 +661,7 @@
     els.metaIntro.value = state.meta.intro;
     els.metaNotice.value = state.meta.notice;
     els.metaContact.value = state.meta.contact;
-    els.metaUpdated.value = state.meta.updatedAt;
+    els.metaUpdated.value = normalizeDate(state.meta.updatedAt);
   }
 
   function buildData() {
@@ -660,7 +672,7 @@
         intro: state.meta.intro.trim(),
         notice: state.meta.notice.trim(),
         contact: state.meta.contact.trim(),
-        updatedAt: state.meta.updatedAt || today()
+        updatedAt: normalizeDate(state.meta.updatedAt) || today()
       },
       works: state.works.map(function (w) {
         var out = {
@@ -746,7 +758,7 @@
       try {
         await dir.getDirectoryHandle("site");
       } catch (e) {
-        toast("请选择 group-gallery 文件夹（里面要有 site 和 source）。");
+        toast("请选择项目文件夹（里面要有 site 和 source）。");
         return false;
       }
       state.dir = dir;
@@ -815,6 +827,13 @@
       var dataDir = await siteDir.getDirectoryHandle("data", { create: true });
       var sourceDir = await state.dir.getDirectoryHandle("source", { create: true });
 
+      var oldWorks = [];
+      try {
+        var oldFile = await sourceDir.getFileHandle("works.json");
+        var oldText = await (await oldFile.getFile()).text();
+        oldWorks = (JSON.parse(oldText).works || []);
+      } catch (e) {}
+
       for (var i = 0; i < state.works.length; i++) {
         var w = state.works[i];
         if (!w._files) continue;
@@ -825,10 +844,29 @@
       await writeFile(dataDir, "works.enc.js", payload.encJs);
       await writeFile(sourceDir, "works.json", payload.json);
 
+      // 删除已从作品列表移除的旧图，避免“删了作品、图还在”
+      var keep = {};
+      state.works.forEach(function (w) {
+        if (w.src) keep[w.src] = true;
+        if (w.thumb) keep[w.thumb] = true;
+      });
+      var removeNames = {};
+      oldWorks.forEach(function (w) {
+        [w.src, w.thumb].forEach(function (path) {
+          if (!path || keep[path] || path.indexOf("media/") !== 0) return;
+          var name = path.slice(6);
+          if (name && name.indexOf("/") === -1) removeNames[name] = true;
+        });
+      });
+      var removed = 0;
+      for (var name in removeNames) {
+        try { await mediaDir.removeEntry(name); removed++; } catch (e) {}
+      }
+
       state.dirty = false;
       state.saved = true;
       updateSaveState();
-      toast("已保存。下一步：把 site 文件夹重新上传到 Cloudflare Pages。");
+      toast("已保存" + (removed ? "，清理 " + removed + " 张旧图" : "") + "。下一步：把 site 文件夹重新上传到 Cloudflare Pages。");
     } catch (e) {
       console.error(e);
       toast("写入失败：" + e.message);
